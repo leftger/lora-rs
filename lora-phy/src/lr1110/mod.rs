@@ -20,6 +20,7 @@ pub use radio_kind_params::{
     LR11XX_SYSTEM_UID_LENGTH,
 };
 // GNSS types
+#[cfg(feature = "lr1110-gnss")]
 pub use radio_kind_params::{
     GnssAssistancePosition, GnssConstellation, GnssConstellationMask, GnssContextStatus, GnssDestination,
     GnssDetectedSatellite, GnssErrorCode, GnssFreqSearchSpace, GnssHostStatus, GnssOpCode, GnssResultFields,
@@ -28,6 +29,7 @@ pub use radio_kind_params::{
     GNSS_SINGLE_ALMANAC_WRITE_SIZE, GNSS_SNR_TO_CNR_OFFSET,
 };
 // WiFi types
+#[cfg(feature = "lr1110-wifi")]
 pub use radio_kind_params::{
     WifiBasicCompleteResult, WifiBasicMacTypeChannelResult, WifiChannel, WifiChannelMask, WifiCumulativeTimings,
     WifiExtendedFullResult, WifiFcsInfo, WifiFrameType, WifiMacAddress, WifiMacOrigin, WifiOpCode, WifiResultFormat,
@@ -38,17 +40,20 @@ pub use radio_kind_params::{
     WIFI_RESULT_SSID_LENGTH,
 };
 // Crypto Engine types
+#[cfg(feature = "lr1110-crypto")]
 pub use radio_kind_params::{
     CryptoElement, CryptoKey, CryptoKeyId, CryptoLorawanVersion, CryptoMic, CryptoNonce, CryptoOpCode, CryptoParam,
     CryptoStatus, CRYPTO_AES_CMAC_LENGTH, CRYPTO_DATA_MAX_LENGTH, CRYPTO_KEY_LENGTH, CRYPTO_MIC_LENGTH,
     CRYPTO_NONCE_LENGTH, CRYPTO_PARAMETER_LENGTH,
 };
 // RTToF (Round-Trip Time of Flight) types
+#[cfg(feature = "lr1110-ranging")]
 pub use radio_kind_params::{
     rttof_distance_raw_to_meters, rttof_rssi_raw_to_dbm, RttofDistanceResult, RttofOpCode, RttofRawResult,
     RttofResultType, RTTOF_DEFAULT_ADDRESS, RTTOF_DEFAULT_NB_SYMBOLS, RTTOF_RESULT_LENGTH,
 };
 // RTToF Ranging demo constants and helpers
+#[cfg(feature = "lr1110-ranging")]
 pub use radio_kind_params::{
     calculate_ranging_request_delay_ms, calculate_symbol_time_ms, lora_bw, lora_cr, lora_sf, packet_type,
     ranging_channels, ranging_config, ranging_irq,
@@ -579,11 +584,18 @@ where
         let cmd = [opcode[0], opcode[1]];
         self.write_command(&cmd).await
     }
+}
 
-    // =========================================================================
-    // GNSS Functions (from SWDR001 lr11xx_gnss.c)
-    // =========================================================================
-
+// =========================================================================
+// GNSS Functions (from SWDR001 lr11xx_gnss.c)
+// =========================================================================
+#[cfg(feature = "lr1110-gnss")]
+impl<SPI, IV, C> Lr1110<SPI, IV, C>
+where
+    SPI: SpiDevice<u8>,
+    IV: InterfaceVariant,
+    C: Lr1110Variant,
+{
     /// Set the GNSS constellations to use
     ///
     /// # Arguments
@@ -943,11 +955,18 @@ where
         self.read_command(&cmd, &mut almanac).await?;
         Ok(almanac)
     }
+}
 
-    // =========================================================================
-    // WiFi Functions (based on SWDR001 lr11xx_wifi.c)
-    // =========================================================================
-
+// =========================================================================
+// WiFi Functions (based on SWDR001 lr11xx_wifi.c)
+// =========================================================================
+#[cfg(feature = "lr1110-wifi")]
+impl<SPI, IV, C> Lr1110<SPI, IV, C>
+where
+    SPI: SpiDevice<u8>,
+    IV: InterfaceVariant,
+    C: Lr1110Variant,
+{
     /// Start a WiFi passive scan
     ///
     /// # Arguments
@@ -1213,11 +1232,18 @@ where
         ];
         self.write_command(&cmd).await
     }
+}
 
-    // =========================================================================
-    // Crypto Engine Functions (from SWDR001 lr11xx_crypto_engine.c)
-    // =========================================================================
-
+// =========================================================================
+// Crypto Engine Functions (from SWDR001 lr11xx_crypto_engine.c)
+// =========================================================================
+#[cfg(feature = "lr1110-crypto")]
+impl<SPI, IV, C> Lr1110<SPI, IV, C>
+where
+    SPI: SpiDevice<u8>,
+    IV: InterfaceVariant,
+    C: Lr1110Variant,
+{
     /// Select the crypto element to use for subsequent operations
     ///
     /// # Arguments
@@ -1649,11 +1675,18 @@ where
         self.read_command(&cmd, &mut rbuffer).await?;
         Ok(rbuffer[0] != 0)
     }
+}
 
-    // =========================================================================
-    // RTToF (Round-Trip Time of Flight) Functions (from SWDR001 lr11xx_rttof.c)
-    // =========================================================================
-
+// =========================================================================
+// RTToF (Round-Trip Time of Flight) Functions (from SWDR001 lr11xx_rttof.c)
+// =========================================================================
+#[cfg(feature = "lr1110-ranging")]
+impl<SPI, IV, C> Lr1110<SPI, IV, C>
+where
+    SPI: SpiDevice<u8>,
+    IV: InterfaceVariant,
+    C: Lr1110Variant,
+{
     /// Set the RTToF address for this subordinate device
     ///
     /// The address is used in subordinate mode when receiving RTToF requests.
@@ -1776,11 +1809,17 @@ where
 
         Ok(RttofDistanceResult { distance_m, rssi_dbm })
     }
+}
 
-    // =========================================================================
-    // RTToF Ranging Public Methods (for ranging demo)
-    // =========================================================================
-
+// =========================================================================
+// Radio Control Methods (used by RTToF ranging and RadioKind)
+// =========================================================================
+impl<SPI, IV, C> Lr1110<SPI, IV, C>
+where
+    SPI: SpiDevice<u8>,
+    IV: InterfaceVariant,
+    C: Lr1110Variant,
+{
     /// Set the packet type (LoRa, RTToF, etc.)
     ///
     /// Used to switch between standard LoRa mode and RTToF mode for ranging.
@@ -2023,11 +2062,17 @@ where
         let cmd = [opcode[0], opcode[1], sync_word];
         self.write_command(&cmd).await
     }
+}
 
-    // =========================================================================
-    // GFSK Functions (from SWDR001 lr11xx_radio.c)
-    // =========================================================================
-
+// =========================================================================
+// GFSK Functions (from SWDR001 lr11xx_radio.c)
+// =========================================================================
+impl<SPI, IV, C> Lr1110<SPI, IV, C>
+where
+    SPI: SpiDevice<u8>,
+    IV: InterfaceVariant,
+    C: Lr1110Variant,
+{
     /// Set GFSK modulation parameters
     ///
     /// # Arguments

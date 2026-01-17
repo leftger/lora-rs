@@ -30,6 +30,21 @@ defmt-03 = ["dep:defmt", "lorawan-device?/defmt-03", "lora-modulation/defmt-03"]
 ## Async LoRaWAN Rx/Tx interface implementation
 lorawan-radio = ["dep:lorawan-device"]
 
+## LR1110 GNSS positioning functions (satellite scanning, almanac management)
+lr1110-gnss = []
+
+## LR1110 WiFi scanning functions (802.11 b/g/n passive scanning for geolocation)
+lr1110-wifi = []
+
+## LR1110 crypto engine functions (key management, AES, LoRaWAN crypto)
+lr1110-crypto = []
+
+## LR1110 RTToF ranging functions (Round-Trip Time of Flight distance measurement)
+lr1110-ranging = []
+
+## Enable all LR1110 optional features
+lr1110-all = ["lr1110-gnss", "lr1110-wifi", "lr1110-crypto", "lr1110-ranging"]
+
 [dev-dependencies]
 # Include lorawan-device unconditionally so all regions are enabled for tests
 lorawan-device = { path = "../lorawan-device" }
